@@ -5,3 +5,40 @@ Install:
 Usage:
 
     rangerdanger std cmd
+
+Description:
+
+    In go, an array is not a reference type (that's what slices are for). An array is a value type,
+    which means the entire thing is copied in some circumstances such as assigning it to a new variable
+    or passing the array as a function argument. For more details see:
+
+    https://blog.golang.org/go-slices-usage-and-internals
+
+    A somewhat surprising consequence is that when using the two-valued "range" clause to iterate over
+    an array, you end up making a copy of the array. The compiler does this to adhere to the specified
+    semantics of "range" - namely that the provided expression is evaluated once only. This means that
+    any changes made to the array contents do not affect the iteration in progress. In many cases you'd
+    rather give up that guarantee than copy the whole array; rangerdanger exists to detect uses of
+    "range" which result in an array copy so they can be avoided when desired.
+
+Example:
+
+    import "fmt"
+    
+    func main() {
+        array := [...]int{1,4,9,16,25}
+        
+        // this usage of range makes a copy of the array
+        for i, n := range array {
+            // reverse the array and turn square numbers into cube numbers
+            array[len(array) - 1 - i] = n
+        }
+        fmt.Println(array) // prints [25 16 9 4 1]
+
+        // to avoid copying the array, pass a slice instead
+        for i, n := range array[:] {
+            // attempt to reverse the array again
+            array[len(array) - 1 - i] = n
+        }
+        fmt.Println(array) // prints [25 16 9 16 25]
+    }
